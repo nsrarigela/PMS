@@ -1,7 +1,3 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { seedIfNeeded, getUsers, upsertUser, setCurrentUser } from "../lib/store";
-
 export default function Login() {
   const navigate = useNavigate();
 
@@ -30,44 +26,57 @@ export default function Login() {
 
   return (
     <div className="login-wrap">
-      <div className="card login-card">
-        <h1 className="login-title">Sign in</h1>
-        <p className="login-sub">Project Management System &middot; demo login</p>
+      <div className="login-panel">
+        <div className="login-brand">
+          <div className="login-brand-mark">P</div>
+          <span>PMS</span>
+        </div>
+        <h2 className="login-panel-title">Manage projects with clarity.</h2>
+        <p className="login-panel-sub">
+          Track tasks, monitor progress, and keep your team aligned — all in one clean workspace.
+        </p>
+      </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="field">
-            <label htmlFor="name">Full name</label>
-            <input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Jordan Lee" />
-          </div>
+      <div className="login-form-side">
+        <div className="card login-card">
+          <h1 className="login-title">Sign in</h1>
+          <p className="login-sub">Project Management System &middot; demo login</p>
 
-          <div className="field">
-            <label htmlFor="email">Email</label>
-            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jordan@company.com" />
-          </div>
+          <form onSubmit={handleSubmit}>
+            <div className="field">
+              <label htmlFor="name">Full name</label>
+              <input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Jordan Lee" />
+            </div>
 
-          <div className="field">
-            <label htmlFor="role">Role</label>
-            <select id="role" value={role} onChange={(e) => setRole(e.target.value)}>
-              <option>Developer</option>
-              <option>Project Manager</option>
-            </select>
-          </div>
+            <div className="field">
+              <label htmlFor="email">Email</label>
+              <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jordan@company.com" />
+            </div>
 
-          <button type="submit" className="btn btn-primary" style={{ width: "100%", justifyContent: "center" }}>
-            Sign in
-          </button>
-        </form>
+            <div className="field">
+              <label htmlFor="role">Role</label>
+              <select id="role" value={role} onChange={(e) => setRole(e.target.value)}>
+                <option>Developer</option>
+                <option>Project Manager</option>
+              </select>
+            </div>
 
-        {demoUsers.length > 0 && (
-          <div className="demo-users">
-            <p>Or jump in as a seeded demo user:</p>
-            {demoUsers.map((u) => (
-              <button key={u.id} className="btn demo-user-btn" onClick={() => quickLogin(u)}>
-                {u.name} &middot; {u.role}
-              </button>
-            ))}
-          </div>
-        )}
+            <button type="submit" className="btn btn-primary" style={{ width: "100%", justifyContent: "center" }}>
+              Sign in
+            </button>
+          </form>
+
+          {demoUsers.length > 0 && (
+            <div className="demo-users">
+              <p>Or jump in as a seeded demo user:</p>
+              {demoUsers.map((u) => (
+                <button key={u.id} className="btn demo-user-btn" onClick={() => quickLogin(u)}>
+                  {u.name} &middot; {u.role}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

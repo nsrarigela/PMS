@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
+import { DndContext, closestCorners, PointerSensor, useSensor, useSensors, useDroppable } from "@dnd-kit/core";
 import Sidebar from "../components/Sidebar";
 import TaskCard from "../components/TaskCard";
 import { useSession } from "../lib/useSession";
@@ -12,8 +13,21 @@ const COLUMNS = [
   { key: "done", label: "Done" },
 ];
 
+function BoardColumn({ col, children, count }) {
+  const { setNodeRef, isOver } = useDroppable({ id: col.key });
+  return (
+    <div className="board-col" ref={setNodeRef} style={{ background: isOver ? "var(--accent-soft)" : undefined }}>
+      <div className="board-col-title">
+        <span>{col.label}</span>
+        <span>{count}</span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
 export default function ProjectDetail() {
-  const { id } = useParams(); // react-router-dom's equivalent of Next's useParams()
+  const { id } = useParams();
   const { user, ready, logout } = useSession();
 
   const [project, setProject] = useState(null);
@@ -21,6 +35,8 @@ export default function ProjectDetail() {
   const [users, setUsers] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   function refresh() {
     setProject(getProject(id));
@@ -48,6 +64,17 @@ export default function ProjectDetail() {
     return isPM || task.assignee === user.id;
   }
 
+  function handleDragEnd(event) {
+    const { active, over } = event;
+    if (!over) return;
+    const task = tasks.find((t) => t.id === active.id);
+    if (!task) return;
+    const newStatus = over.id;
+    if (task.status === newStatus) return;
+    if (!canEditTask(task)) return;
+    moveTask(task, newStatus);
+  }
+
   return (
     <div className="app-shell">
       <Sidebar user={user} onLogout={logout} />
@@ -57,11 +84,15 @@ export default function ProjectDetail() {
             <h1>{project.name}</h1>
             <p>{project.description}</p>
           </div>
-          {isPM && (
-            <button className="btn btn-primary" onClick={() => setShowForm((s) => !s)}>
-              {showForm ? "Close" : "+ New task"}
-            </button>
-          )}
+          <div style={{ display: "flex", gap: 8 }}>
+            <Link to={`/projects/${id}/sprints`} className="btn">Sprints</Link>
+            <Link to={`/projects/${id}/bugs`} className="btn">Bugs</Link>
+            {isPM && (
+              <button className="btn btn-primary" onClick={() => setShowForm((s) => !s)}>
+                {showForm ? "Close" : "+ New task"}
+              </button>
+            )}
+          </div>
         </div>
 
         {showForm && (
@@ -72,30 +103,28 @@ export default function ProjectDetail() {
           />
         )}
 
-        <div className="board">
-          {COLUMNS.map((col) => {
-            const colTasks = tasks.filter((t) => t.status === col.key);
-            return (
-              <div className="board-col" key={col.key}>
-                <div className="board-col-title">
-                  <span>{col.label}</span>
-                  <span>{colTasks.length}</span>
-                </div>
-                {colTasks.map((t) => (
-                  <TaskCard
-                    key={t.id}
-                    task={t}
-                    assigneeName={userName(t.assignee)}
-                    canEdit={canEditTask(t)}
-                    onMove={moveTask}
-                    onOpen={setSelectedTask}
-                  />
-                ))}
-                {colTasks.length === 0 && <p style={{ fontSize: 12, color: "var(--muted)", padding: "0 6px" }}>No tasks</p>}
-              </div>
-            );
-          })}
-        </div>
+        <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+          <div className="board">
+            {COLUMNS.map((col) => {
+              const colTasks = tasks.filter((t) => t.status === col.key);
+              return (
+                <BoardColumn key={col.key} col={col} count={colTasks.length}>
+                  {colTasks.map((t) => (
+                    <TaskCard
+                      key={t.id}
+                      task={t}
+                      assigneeName={userName(t.assignee)}
+                      canEdit={canEditTask(t)}
+                      onMove={moveTask}
+                      onOpen={setSelectedTask}
+                    />
+                  ))}
+                  {colTasks.length === 0 && <p style={{ fontSize: 12, color: "var(--muted)", padding: "0 6px" }}>No tasks</p>}
+                </BoardColumn>
+              );
+            })}
+          </div>
+        </DndContext>
       </main>
 
       {selectedTask && (

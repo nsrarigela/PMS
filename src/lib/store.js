@@ -2,20 +2,21 @@
 //
 // This file is the ONLY place in the app that talks to localStorage directly.
 // Everything else (pages, components) calls the functions below.
-// Think of it as a tiny fake backend/database that lives in the browser.
 
 const KEYS = {
   USERS: "pms_users",
   PROJECTS: "pms_projects",
   TASKS: "pms_tasks",
+  SPRINTS: "pms_sprints",
+  BUGS: "pms_bugs",
   CURRENT_USER: "pms_current_user",
-  SEEDED: "pms_seeded",
+  SEEDED: "pms_seeded_v2",
 };
 
 // ---------- low level helpers ----------
 
 function read(key, fallback) {
-  if (typeof window === "undefined") return fallback; // guards against server-side render
+  if (typeof window === "undefined") return fallback;
   const raw = window.localStorage.getItem(key);
   if (!raw) return fallback;
   try {
@@ -50,22 +51,37 @@ export function seedIfNeeded() {
       id: "p-1",
       name: "Checkout Revamp",
       description: "Redesign the checkout flow to reduce cart abandonment.",
+      client: "ABC Retail",
+      startDate: "2026-05-01",
+      endDate: "2026-08-01",
+      status: "Active",
       createdBy: "u-pm1",
       members: ["u-pm1", "u-dev1", "u-dev2"],
       createdAt: Date.now(),
     },
   ];
 
+  const sprints = [
+    { id: "s-1", projectId: "p-1", name: "Sprint 1", startDate: "2026-05-01", endDate: "2026-05-14" },
+  ];
+
   const tasks = [
-    { id: "t-1", projectId: "p-1", key: "TASK-101", title: "Design new cart page", description: "Wireframe the updated cart layout.", status: "todo", priority: "medium", type: "task", assignee: "u-dev1", createdAt: Date.now() },
-    { id: "t-2", projectId: "p-1", key: "TASK-102", title: "Payment API times out", description: "Stripe call occasionally hangs for 30s+.", status: "in-progress", priority: "high", type: "bug", assignee: "u-dev2", createdAt: Date.now() },
-    { id: "t-3", projectId: "p-1", key: "TASK-103", title: "Add promo code field", description: "Allow users to apply discount codes at checkout.", status: "review", priority: "low", type: "task", assignee: "u-dev1", createdAt: Date.now() },
-    { id: "t-4", projectId: "p-1", key: "TASK-104", title: "Set up analytics events", description: "Track funnel drop-off at each checkout step.", status: "done", priority: "medium", type: "task", assignee: "u-dev2", createdAt: Date.now() },
+    { id: "t-1", projectId: "p-1", sprintId: "s-1", key: "TASK-101", title: "Design new cart page", description: "Wireframe the updated cart layout.", status: "todo", priority: "medium", type: "task", assignee: "u-dev1", dueDate: "2026-05-10", createdAt: Date.now() },
+    { id: "t-2", projectId: "p-1", sprintId: "s-1", key: "TASK-102", title: "Payment API times out", description: "Stripe call occasionally hangs for 30s+.", status: "in-progress", priority: "high", type: "bug", assignee: "u-dev2", dueDate: "2026-05-12", createdAt: Date.now() },
+    { id: "t-3", projectId: "p-1", sprintId: "s-1", key: "TASK-103", title: "Add promo code field", description: "Allow users to apply discount codes at checkout.", status: "review", priority: "low", type: "task", assignee: "u-dev1", dueDate: "2026-05-13", createdAt: Date.now() },
+    { id: "t-4", projectId: "p-1", sprintId: null, key: "TASK-104", title: "Set up analytics events", description: "Track funnel drop-off at each checkout step.", status: "done", priority: "medium", type: "task", assignee: "u-dev2", dueDate: "2026-05-05", createdAt: Date.now() },
+  ];
+
+  const bugs = [
+    { id: "b-1", projectId: "p-1", title: "Login button not working on Safari", description: "Click event doesn't fire on iOS Safari 17.", priority: "high", assignee: "u-dev2", status: "Open", createdAt: Date.now() },
+    { id: "b-2", projectId: "p-1", title: "Payment failed silently", description: "No error shown when Stripe declines a card.", priority: "high", assignee: "u-dev2", status: "In Progress", createdAt: Date.now() },
   ];
 
   write(KEYS.USERS, users);
   write(KEYS.PROJECTS, projects);
+  write(KEYS.SPRINTS, sprints);
   write(KEYS.TASKS, tasks);
+  write(KEYS.BUGS, bugs);
   write(KEYS.SEEDED, true);
 }
 
@@ -113,12 +129,16 @@ export function getProject(id) {
   return getProjects().find((p) => p.id === id) || null;
 }
 
-export function addProject({ name, description, createdBy }) {
+export function addProject({ name, description, client, startDate, endDate, status, createdBy }) {
   const projects = getProjects();
   const project = {
     id: uid("p"),
     name,
     description,
+    client: client || "",
+    startDate: startDate || "",
+    endDate: endDate || "",
+    status: status || "Active",
     createdBy,
     members: [createdBy],
     createdAt: Date.now(),
@@ -126,6 +146,41 @@ export function addProject({ name, description, createdBy }) {
   projects.push(project);
   write(KEYS.PROJECTS, projects);
   return project;
+}
+
+export function updateProject(projectId, changes) {
+  const projects = getProjects();
+  const idx = projects.findIndex((p) => p.id === projectId);
+  if (idx === -1) return null;
+  projects[idx] = { ...projects[idx], ...changes };
+  write(KEYS.PROJECTS, projects);
+  return projects[idx];
+}
+
+// ---------- sprints ----------
+
+export function getSprintsByProject(projectId) {
+  return read(KEYS.SPRINTS, []).filter((s) => s.projectId === projectId);
+}
+
+export function getSprint(id) {
+  return read(KEYS.SPRINTS, []).find((s) => s.id === id) || null;
+}
+
+export function addSprint({ projectId, name, startDate, endDate }) {
+  const sprints = read(KEYS.SPRINTS, []);
+  const sprint = { id: uid("s"), projectId, name, startDate: startDate || "", endDate: endDate || "" };
+  sprints.push(sprint);
+  write(KEYS.SPRINTS, sprints);
+  return sprint;
+}
+
+export function deleteSprint(sprintId) {
+  const sprints = read(KEYS.SPRINTS, []).filter((s) => s.id !== sprintId);
+  write(KEYS.SPRINTS, sprints);
+  // unlink any tasks that were in this sprint
+  const tasks = getAllTasks().map((t) => (t.sprintId === sprintId ? { ...t, sprintId: null } : t));
+  write(KEYS.TASKS, tasks);
 }
 
 // ---------- tasks ----------
@@ -138,6 +193,10 @@ export function getTasksByProject(projectId) {
   return getAllTasks().filter((t) => t.projectId === projectId);
 }
 
+export function getTasksBySprint(sprintId) {
+  return getAllTasks().filter((t) => t.sprintId === sprintId);
+}
+
 function nextTaskKey() {
   const tasks = getAllTasks();
   const max = tasks.reduce((m, t) => {
@@ -147,11 +206,12 @@ function nextTaskKey() {
   return `TASK-${max + 1}`;
 }
 
-export function addTask({ projectId, title, description, priority, type, assignee }) {
+export function addTask({ projectId, sprintId, title, description, priority, type, assignee, dueDate }) {
   const tasks = getAllTasks();
   const task = {
     id: uid("t"),
     projectId,
+    sprintId: sprintId || null,
     key: nextTaskKey(),
     title,
     description,
@@ -159,6 +219,7 @@ export function addTask({ projectId, title, description, priority, type, assigne
     priority: priority || "medium",
     type: type || "task",
     assignee: assignee || "",
+    dueDate: dueDate || "",
     createdAt: Date.now(),
   };
   tasks.push(task);
@@ -178,4 +239,40 @@ export function updateTask(taskId, changes) {
 export function deleteTask(taskId) {
   const tasks = getAllTasks().filter((t) => t.id !== taskId);
   write(KEYS.TASKS, tasks);
+}
+
+// ---------- bugs (dedicated Bug Tracking module) ----------
+
+export function getAllBugs() {
+  return read(KEYS.BUGS, []);
+}
+
+export function getBugsByProject(projectId) {
+  return getAllBugs().filter((b) => b.projectId === projectId);
+}
+
+export function addBug({ projectId, title, description, priority, assignee }) {
+  const bugs = getAllBugs();
+  const bug = {
+    id: uid("b"),
+    projectId,
+    title,
+    description: description || "",
+    priority: priority || "medium",
+    assignee: assignee || "",
+    status: "Open",
+    createdAt: Date.now(),
+  };
+  bugs.push(bug);
+  write(KEYS.BUGS, bugs);
+  return bug;
+}
+
+export function updateBug(bugId, changes) {
+  const bugs = getAllBugs();
+  const idx = bugs.findIndex((b) => b.id === bugId);
+  if (idx === -1) return null;
+  bugs[idx] = { ...bugs[idx], ...changes };
+  write(KEYS.BUGS, bugs);
+  return bugs[idx];
 }

@@ -1,5 +1,5 @@
-// One card = one task. `columns` is the ordered list of statuses, used to
-// figure out which arrow buttons ("<" / ">") should be shown/enabled.
+import { useDraggable } from "@dnd-kit/core";
+
 const COLUMNS = ["todo", "in-progress", "review", "done"];
 
 function initials(name) {
@@ -10,11 +10,35 @@ function initials(name) {
 export default function TaskCard({ task, assigneeName, canEdit, onMove, onOpen }) {
   const colIndex = COLUMNS.indexOf(task.status);
 
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: task.id,
+    disabled: !canEdit,
+  });
+
+  const style = {
+    transform: transform ? `translate(${transform.x}px, ${transform.y}px)` : undefined,
+    zIndex: isDragging ? 50 : "auto",
+    opacity: isDragging ? 0.6 : 1,
+    position: isDragging ? "relative" : "static",
+  };
+
   return (
-    <div className="task-card">
+    <div className="task-card" ref={setNodeRef} style={style}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span className="task-key">{task.key}</span>
-        <span className={`badge badge-${task.type}`}>{task.type}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span className={`badge badge-${task.type}`}>{task.type}</span>
+          {canEdit && (
+            <span
+              className="drag-handle"
+              {...listeners}
+              {...attributes}
+              title="Drag to move"
+            >
+              ⠿
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="task-card-title" role="button" onClick={() => onOpen(task)} style={{ cursor: "pointer" }}>
