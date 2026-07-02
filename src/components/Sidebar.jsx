@@ -1,34 +1,43 @@
 import { Link, useLocation } from "react-router-dom";
+import { LayoutDashboard, FolderKanban, BarChart3, LogOut } from "lucide-react";
 
 const LINKS = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/projects", label: "Projects" },
-  { href: "/reports", label: "Reports" },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/projects", label: "Projects", icon: FolderKanban },
+  { href: "/reports", label: "Reports", icon: BarChart3 },
 ];
 
 export default function Sidebar({ user, onLogout }) {
-  const location = useLocation(); // react-router-dom's equivalent of next's usePathname()
+  const location = useLocation();
   const pathname = location.pathname;
 
   return (
     <nav className="sidebar">
-      <div className="sidebar-brand">PMS</div>
+      <div className="sidebar-brand">
+        <div className="sidebar-logo">P</div>
+        <span>PMS</span>
+      </div>
 
       {LINKS.map((link) => {
         const active = pathname === link.href || pathname.startsWith(link.href + "/");
+        const Icon = link.icon;
         return (
           <Link key={link.href} to={link.href} className={`sidebar-link${active ? " active" : ""}`}>
-            {link.label}
+            <Icon size={17} strokeWidth={2} />
+            <span>{link.label}</span>
           </Link>
         );
       })}
 
       {user && (
         <div className="sidebar-user">
-          <strong>{user.name}</strong>
-          {user.role}
-          <button className="logout-btn" onClick={onLogout}>
-            Log out
+          <div className="sidebar-user-avatar">{user.name.charAt(0)}</div>
+          <div>
+            <strong>{user.name}</strong>
+            <span>{user.role}</span>
+          </div>
+          <button className="logout-btn" onClick={onLogout} title="Log out">
+            <LogOut size={15} />
           </button>
         </div>
       )}

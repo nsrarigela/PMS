@@ -64,24 +64,15 @@ button { font-family: inherit; cursor: pointer; }
   box-shadow: 2px 0 12px rgba(0,0,0,0.15);
 }
 
-.sidebar-brand {
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 600;
-  font-size: 18px;
-  color: #fff;
-  margin-bottom: 26px;
-  padding: 0 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .sidebar-link {
   padding: 10px 12px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   color: #b7b5c9;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   transition: background 0.18s var(--ease), color 0.18s var(--ease), transform 0.18s var(--ease);
 }
 
@@ -91,16 +82,6 @@ button { font-family: inherit; cursor: pointer; }
   color: #fff;
   box-shadow: 0 2px 8px rgba(75, 63, 214, 0.4);
 }
-
-.sidebar-user {
-  margin-top: auto;
-  padding: 14px 8px;
-  border-top: 1px solid #2a2a31;
-  font-size: 12.5px;
-  color: #9694a8;
-}
-
-.sidebar-user strong { display: block; color: #fff; font-size: 13.5px; margin-bottom: 2px; }
 
 .logout-btn {
   margin-top: 10px;
@@ -245,19 +226,19 @@ th { text-align: left; color: var(--muted); font-weight: 600; font-size: 12px; t
 td { padding: 11px 10px; border-bottom: 1px solid var(--border); }
 tr:hover td { background: #fafaf8; }
 
-/* ---------- Login (split-screen) ---------- */
+/* ---------- Login (split-screen, teal theme) ---------- */
 .login-wrap {
   min-height: 100vh;
   display: flex;
 }
 
 .login-panel {
-  flex: 1;
+  flex: 1.15;
   background:
-    radial-gradient(circle at 30% 20%, rgba(255,255,255,0.08), transparent 45%),
-    linear-gradient(150deg, var(--accent-dark), var(--accent) 60%, #6a5ff0);
+    radial-gradient(circle at 15% 15%, rgba(255,255,255,0.06), transparent 40%),
+    linear-gradient(155deg, #0d3b36 0%, #0f766e 55%, #14b8a6 100%);
   color: #fff;
-  padding: 56px;
+  padding: 60px 64px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -272,7 +253,7 @@ tr:hover td { background: #fafaf8; }
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 600;
   font-size: 18px;
-  margin-bottom: 40px;
+  margin-bottom: 48px;
 }
 
 .login-brand-mark {
@@ -288,19 +269,31 @@ tr:hover td { background: #fafaf8; }
 }
 
 .login-panel-title {
-  font-size: 32px;
-  font-weight: 600;
-  line-height: 1.25;
-  max-width: 380px;
-  margin-bottom: 14px;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 16px;
 }
+.login-panel-title-accent { color: #6ee7d8; }
 
 .login-panel-sub {
-  font-size: 14.5px;
-  color: rgba(255,255,255,0.8);
-  max-width: 340px;
-  line-height: 1.6;
+  font-size: 15px;
+  color: rgba(255,255,255,0.78);
+  max-width: 400px;
+  line-height: 1.65;
+  margin-bottom: 40px;
 }
+
+.login-feature-list { display: flex; flex-direction: column; gap: 18px; max-width: 400px; }
+.login-feature { display: flex; gap: 14px; align-items: flex-start; }
+.login-feature-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: rgba(255,255,255,0.12);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.login-feature strong { font-size: 14px; font-weight: 600; display: block; margin-bottom: 2px; }
+.login-feature p { font-size: 13px; color: rgba(255,255,255,0.7); margin: 0; line-height: 1.5; }
 
 .login-form-side {
   flex: 1;
@@ -317,11 +310,18 @@ tr:hover td { background: #fafaf8; }
   box-shadow: var(--shadow-lg);
   padding: 32px 30px;
 }
-.login-title { font-size: 23px; font-weight: 600; margin-bottom: 5px; }
+.login-title { font-size: 22px; font-weight: 600; margin-bottom: 5px; }
 .login-sub { color: var(--muted); font-size: 13.5px; margin-bottom: 22px; }
-.demo-users { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px; }
-.demo-users p { font-size: 12px; color: var(--muted); margin: 0 0 9px; }
-.demo-user-btn { width: 100%; text-align: left; margin-bottom: 7px; font-size: 13px; }
+
+.demo-users { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 14px; }
+.demo-toggle {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: none; padding: 0;
+  font-size: 12.5px; color: var(--muted); font-weight: 600;
+  margin-bottom: 8px;
+}
+.demo-toggle:hover { color: var(--accent); }
+.demo-user-btn { width: 100%; text-align: left; margin-bottom: 6px; font-size: 13px; }
 
 @media (max-width: 860px) {
   .login-panel { display: none; }
@@ -352,3 +352,83 @@ tr:hover td { background: #fafaf8; }
 }
 .drag-handle:hover { background: #f0efea; color: var(--text); }
 .drag-handle:active { cursor: grabbing; }
+
+/* ---------- Sidebar polish ---------- */
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+  color: #fff;
+  margin-bottom: 26px;
+  padding: 0 8px;
+}
+.sidebar-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #7c6ef2, #4b3fd6, #a06ef2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.sidebar-user {
+  margin-top: auto;
+  padding: 14px 8px;
+  border-top: 1px solid #2a2a31;
+  font-size: 12.5px;
+  color: #9694a8;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+.sidebar-user-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #7c6ef2);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+.sidebar-user > div { display: flex; flex-direction: column; line-height: 1.3; }
+.sidebar-user strong { display: block; color: #fff; font-size: 13.5px; }
+.sidebar-user .logout-btn {
+  margin-left: auto; margin-top: 0; width: auto; padding: 6px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ---------- Colorful pastel stat cards ---------- */
+.stat-card-color {
+  border-radius: 14px;
+  padding: 18px 20px;
+  border: 1px solid transparent;
+}
+.stat-card-color .stat-value { font-size: 26px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; }
+.stat-card-color .stat-label { font-size: 12.5px; margin-top: 4px; opacity: 0.85; }
+
+.stat-purple { background: #f1eefe; }
+.stat-purple .stat-value { color: #6c4fd1; }
+.stat-blue   { background: #eaf1fe; }
+.stat-blue .stat-value   { color: #2a63c9; }
+.stat-teal   { background: #e8f8f4; }
+.stat-teal .stat-value   { color: #0f9d78; }
+.stat-green  { background: #eaf9ee; }
+.stat-green .stat-value  { color: var(--success); }
+.stat-amber  { background: #fdf3df; }
+.stat-amber .stat-value  { color: var(--warning); }
+.stat-rose   { background: #fdecec; }
+.stat-rose .stat-value   { color: var(--danger); }
+
+.accent-text { color: var(--accent); }
+.loading {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 600;
+}

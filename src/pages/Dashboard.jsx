@@ -50,34 +50,34 @@ export default function Dashboard() {
       <main className="content">
         <div className="page-header">
           <div>
-            <h1>Dashboard</h1>
-            <p>Welcome back, {user.name.split(" ")[0]} &middot; {user.role}</p>
+            <h1>Welcome back, <span className="accent-text">{user.name.split(" ")[0]}</span></h1>
+            <p>Your workspace is ready &middot; {user.role}</p>
           </div>
         </div>
 
-        <div className="stat-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
-          <div className="card stat-card">
+       <div className="stat-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+          <div className="stat-card-color stat-purple">
             <div className="stat-value">{projects.length}</div>
             <div className="stat-label">Total projects</div>
           </div>
-          <div className="card stat-card">
+          <div className="stat-card-color stat-blue">
             <div className="stat-value">{tasks.length}</div>
             <div className="stat-label">Total tasks</div>
           </div>
-          <div className="card stat-card">
+          <div className="stat-card-color stat-teal">
             <div className="stat-value">{developers.length}</div>
             <div className="stat-label">Developers</div>
           </div>
-          <div className="card stat-card">
-            <div className="stat-value" style={{ color: "var(--success)" }}>{doneCount}</div>
+          <div className="stat-card-color stat-green">
+            <div className="stat-value">{doneCount}</div>
             <div className="stat-label">Completed tasks</div>
           </div>
-          <div className="card stat-card">
-            <div className="stat-value" style={{ color: "var(--warning)" }}>{pendingCount}</div>
+          <div className="stat-card-color stat-amber">
+            <div className="stat-value">{pendingCount}</div>
             <div className="stat-label">Pending tasks</div>
           </div>
-          <div className="card stat-card">
-            <div className="stat-value" style={{ color: "var(--danger)" }}>{openBugs}</div>
+          <div className="stat-card-color stat-rose">
+            <div className="stat-value">{openBugs}</div>
             <div className="stat-label">Open bugs</div>
           </div>
         </div>
