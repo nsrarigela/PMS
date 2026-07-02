@@ -1,10 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, FolderKanban, BarChart3, LogOut } from "lucide-react";
+import { LayoutDashboard, FolderKanban, ListChecks, BarChart3, User, LogOut } from "lucide-react";
 
 const LINKS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/my-tasks", label: "My Tasks", icon: ListChecks },
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/reports", label: "Reports", icon: BarChart3 },
+  { href: "/profile", label: "Profile", icon: User },
 ];
 
 export default function Sidebar({ user, onLogout }) {

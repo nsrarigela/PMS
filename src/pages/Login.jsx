@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { KanbanSquare, GitBranch, Bug, Eye, EyeOff } from "lucide-react";
+import { KanbanSquare, GitBranch, Bug, Eye, EyeOff, ShieldCheck, KeyRound, Database } from "lucide-react";
 import { seedIfNeeded, getUsers, upsertUser, setCurrentUser } from "../lib/store";
 
 const FEATURES = [
@@ -14,24 +14,19 @@ export default function Login() {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [role, setRole] = useState("Developer");
-  const [showHint, setShowHint] = useState(false);
-  const [demoUsers, setDemoUsers] = useState([]);
+  const [showPw, setShowPw] = useState(false);
 
   useEffect(() => {
     seedIfNeeded();
-    setDemoUsers(getUsers());
+    getUsers();
   }, []);
 
   function handleSubmit(e) {
     e.preventDefault();
     if (!name.trim() || !email.trim()) return;
     const user = upsertUser({ name: name.trim(), email: email.trim(), role });
-    setCurrentUser(user);
-    navigate("/dashboard");
-  }
-
-  function quickLogin(user) {
     setCurrentUser(user);
     navigate("/dashboard");
   }
@@ -85,6 +80,30 @@ export default function Login() {
             </div>
 
             <div className="field">
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <label htmlFor="pw">Password</label>
+                <span style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600, cursor: "not-allowed" }}>Forgot password?</span>
+              </div>
+              <div style={{ position: "relative" }}>
+                <input
+                  id="pw"
+                  type={showPw ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  style={{ paddingRight: 38 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw((s) => !s)}
+                  style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--muted)", padding: 2 }}
+                >
+                  {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="field">
               <label htmlFor="role">Role</label>
               <select id="role" value={role} onChange={(e) => setRole(e.target.value)}>
                 <option>Developer</option>
@@ -97,23 +116,11 @@ export default function Login() {
             </button>
           </form>
 
-          {demoUsers.length > 0 && (
-            <div className="demo-users">
-              <button
-                type="button"
-                className="demo-toggle"
-                onClick={() => setShowHint((s) => !s)}
-              >
-                {showHint ? <EyeOff size={13} /> : <Eye size={13} />}
-                {showHint ? "Hide demo accounts" : "Show demo accounts"}
-              </button>
-              {showHint && demoUsers.map((u) => (
-                <button key={u.id} className="btn demo-user-btn" onClick={() => quickLogin(u)}>
-                  {u.name} &middot; {u.role}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="login-trust-badges">
+            <span><ShieldCheck size={13} /> Secure</span>
+            <span><KeyRound size={13} /> Role-based access</span>
+            <span><Database size={13} /> Local storage demo</span>
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState, lazy, Suspense } from "react";
 import { seedIfNeeded, getCurrentUser } from "./lib/store";
+import Profile from "./pages/Profile";
+import MyTasks from "./pages/MyTasks";
 
 // Lazy-loaded pages
 const Login = lazy(() => import("./pages/Login"));
@@ -34,7 +36,9 @@ export default function App() {
         <Route path="/projects/:id/sprints" element={<Sprints />} />
         <Route path="/projects/:id/bugs" element={<Bugs />} />
         <Route path="/reports" element={<Reports />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/my-tasks" element={<MyTasks />} />
       </Routes>
     </Suspense>
   );

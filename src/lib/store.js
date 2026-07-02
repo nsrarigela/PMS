@@ -10,7 +10,7 @@ const KEYS = {
   SPRINTS: "pms_sprints",
   BUGS: "pms_bugs",
   CURRENT_USER: "pms_current_user",
-  SEEDED: "pms_seeded_v2",
+  SEEDED: "pms_seeded_v4",
 };
 
 // ---------- low level helpers ----------
@@ -41,10 +41,19 @@ export function seedIfNeeded() {
   if (read(KEYS.SEEDED, false)) return;
 
   const users = [
-    { id: "u-pm1", name: "Alice Chen", email: "alice@demo.com", role: "Project Manager" },
-    { id: "u-dev1", name: "Bob Kumar", email: "bob@demo.com", role: "Developer" },
-    { id: "u-dev2", name: "Priya Rao", email: "priya@demo.com", role: "Developer" },
+    { id: "u-pm1", name: "Naidu Srinivas", email: "naidu@demo.com", role: "Project Manager" },
+    { id: "u-pm2", name: "Rahul Verma", email: "rahul@demo.com", role: "Project Manager" },
+    { id: "u-dev1", name: "Aravind Kumar", email: "aravind@demo.com", role: "Developer" },
+    { id: "u-dev2", name: "Manoj Reddy", email: "manoj@demo.com", role: "Developer" },
+    { id: "u-dev3", name: "Tilak Varma", email: "tilak@demo.com", role: "Developer" },
+    { id: "u-dev4", name: "Vamsi Krishna", email: "vamsi@demo.com", role: "Developer" },
+    { id: "u-dev5", name: "Rakesh Nagendra", email: "rakesh@demo.com", role: "Developer" },
+    { id: "u-dev6", name: "Sairam Chowdary", email: "sairam@demo.com", role: "Developer" },
+    { id: "u-dev7", name: "Bharath Teja", email: "bharath@demo.com", role: "Developer" },
+    { id: "u-dev8", name: "Akhil Kiran", email: "akhil@demo.com", role: "Developer" },
   ];
+
+  const allDevIds = users.filter((u) => u.role === "Developer").map((u) => u.id);
 
   const projects = [
     {
@@ -56,25 +65,68 @@ export function seedIfNeeded() {
       endDate: "2026-08-01",
       status: "Active",
       createdBy: "u-pm1",
-      members: ["u-pm1", "u-dev1", "u-dev2"],
+      members: ["u-pm1", ...allDevIds.slice(0, 4)],
+      createdAt: Date.now(),
+    },
+    {
+      id: "p-2",
+      name: "Online Banking Portal",
+      description: "Secure customer portal for account management and transfers.",
+      client: "ABC Bank",
+      startDate: "2026-04-15",
+      endDate: "2026-09-30",
+      status: "Active",
+      createdBy: "u-pm2",
+      members: ["u-pm2", ...allDevIds.slice(2, 8)],
+      createdAt: Date.now(),
+    },
+    {
+      id: "p-3",
+      name: "Hospital Management System",
+      description: "Patient records, appointments, and billing in one system.",
+      client: "CityCare Hospitals",
+      startDate: "2026-06-01",
+      endDate: "2026-12-01",
+      status: "On Hold",
+      createdBy: "u-pm1",
+      members: ["u-pm1", ...allDevIds.slice(4, 8)],
       createdAt: Date.now(),
     },
   ];
 
   const sprints = [
     { id: "s-1", projectId: "p-1", name: "Sprint 1", startDate: "2026-05-01", endDate: "2026-05-14" },
+    { id: "s-2", projectId: "p-2", name: "Sprint 1", startDate: "2026-04-15", endDate: "2026-04-29" },
+    { id: "s-3", projectId: "p-2", name: "Sprint 2", startDate: "2026-04-30", endDate: "2026-05-14" },
   ];
 
   const tasks = [
-    { id: "t-1", projectId: "p-1", sprintId: "s-1", key: "TASK-101", title: "Design new cart page", description: "Wireframe the updated cart layout.", status: "todo", priority: "medium", type: "task", assignee: "u-dev1", dueDate: "2026-05-10", createdAt: Date.now() },
-    { id: "t-2", projectId: "p-1", sprintId: "s-1", key: "TASK-102", title: "Payment API times out", description: "Stripe call occasionally hangs for 30s+.", status: "in-progress", priority: "high", type: "bug", assignee: "u-dev2", dueDate: "2026-05-12", createdAt: Date.now() },
-    { id: "t-3", projectId: "p-1", sprintId: "s-1", key: "TASK-103", title: "Add promo code field", description: "Allow users to apply discount codes at checkout.", status: "review", priority: "low", type: "task", assignee: "u-dev1", dueDate: "2026-05-13", createdAt: Date.now() },
-    { id: "t-4", projectId: "p-1", sprintId: null, key: "TASK-104", title: "Set up analytics events", description: "Track funnel drop-off at each checkout step.", status: "done", priority: "medium", type: "task", assignee: "u-dev2", dueDate: "2026-05-05", createdAt: Date.now() },
+    // Checkout Revamp (p-1)
+    { id: "t-1", projectId: "p-1", sprintId: "s-1", key: "TASK-101", title: "Design new cart page", description: "Wireframe the updated cart layout.", status: "todo", priority: "medium", type: "task", assignee: "u-dev1", dueDate: "2026-07-10", createdAt: Date.now() },
+    { id: "t-2", projectId: "p-1", sprintId: "s-1", key: "TASK-102", title: "Payment API times out", description: "Stripe call occasionally hangs for 30s+.", status: "in-progress", priority: "high", type: "bug", assignee: "u-dev2", dueDate: "2026-07-05", createdAt: Date.now() },
+    { id: "t-3", projectId: "p-1", sprintId: "s-1", key: "TASK-103", title: "Add promo code field", description: "Allow users to apply discount codes at checkout.", status: "review", priority: "low", type: "task", assignee: "u-dev3", dueDate: "2026-07-12", createdAt: Date.now() },
+    { id: "t-4", projectId: "p-1", sprintId: null, key: "TASK-104", title: "Set up analytics events", description: "Track funnel drop-off at each checkout step.", status: "done", priority: "medium", type: "task", assignee: "u-dev4", dueDate: "2026-07-02", createdAt: Date.now() },
+
+    // Online Banking Portal (p-2)
+    { id: "t-5", projectId: "p-2", sprintId: "s-2", key: "TASK-201", title: "Create login page", description: "Implement OTP-based secure login.", status: "done", priority: "high", type: "task", assignee: "u-dev3", dueDate: "2026-07-01", createdAt: Date.now() },
+    { id: "t-6", projectId: "p-2", sprintId: "s-2", key: "TASK-202", title: "Build dashboard UI", description: "Account overview with balances and recent transactions.", status: "in-progress", priority: "high", type: "task", assignee: "u-dev4", dueDate: "2026-07-08", createdAt: Date.now() },
+    { id: "t-7", projectId: "p-2", sprintId: "s-3", key: "TASK-203", title: "Payment module", description: "Fund transfers between linked accounts.", status: "todo", priority: "high", type: "task", assignee: "u-dev5", dueDate: "2026-07-15", createdAt: Date.now() },
+    { id: "t-8", projectId: "p-2", sprintId: "s-3", key: "TASK-204", title: "Fix session timeout bug", description: "Users get logged out mid-transfer.", status: "review", priority: "high", type: "bug", assignee: "u-dev6", dueDate: "2026-07-06", createdAt: Date.now() },
+    { id: "t-9", projectId: "p-2", sprintId: null, key: "TASK-205", title: "Transaction history export", description: "Allow CSV/PDF export of statements.", status: "todo", priority: "low", type: "task", assignee: "u-dev7", dueDate: "2026-07-20", createdAt: Date.now() },
+
+    // Hospital Management System (p-3)
+    { id: "t-10", projectId: "p-3", sprintId: null, key: "TASK-301", title: "Patient registration form", description: "Capture demographics and medical history.", status: "todo", priority: "medium", type: "task", assignee: "u-dev6", dueDate: "2026-07-18", createdAt: Date.now() },
+    { id: "t-11", projectId: "p-3", sprintId: null, key: "TASK-302", title: "Appointment scheduling bug", description: "Double-booking allowed on same time slot.", status: "in-progress", priority: "high", type: "bug", assignee: "u-dev8", dueDate: "2026-07-09", createdAt: Date.now() },
+    { id: "t-12", projectId: "p-3", sprintId: null, key: "TASK-303", title: "Billing summary page", description: "Itemized invoice view for patients.", status: "todo", priority: "medium", type: "task", assignee: "u-dev5", dueDate: "2026-07-22", createdAt: Date.now() },
   ];
 
   const bugs = [
     { id: "b-1", projectId: "p-1", title: "Login button not working on Safari", description: "Click event doesn't fire on iOS Safari 17.", priority: "high", assignee: "u-dev2", status: "Open", createdAt: Date.now() },
     { id: "b-2", projectId: "p-1", title: "Payment failed silently", description: "No error shown when Stripe declines a card.", priority: "high", assignee: "u-dev2", status: "In Progress", createdAt: Date.now() },
+    { id: "b-3", projectId: "p-2", title: "Session timeout mid-transfer", description: "Users logged out during fund transfer.", priority: "high", assignee: "u-dev6", status: "In Progress", createdAt: Date.now() },
+    { id: "b-4", projectId: "p-2", title: "Balance not refreshing", description: "Dashboard shows stale balance after a transfer.", priority: "medium", assignee: "u-dev4", status: "Open", createdAt: Date.now() },
+    { id: "b-5", projectId: "p-3", title: "Duplicate appointment slots", description: "Two patients can book the same time slot.", priority: "high", assignee: "u-dev8", status: "Open", createdAt: Date.now() },
+    { id: "b-6", projectId: "p-1", title: "Promo code not applying discount", description: "Valid codes accepted but discount not calculated.", priority: "medium", assignee: "u-dev3", status: "Fixed", createdAt: Date.now() },
   ];
 
   write(KEYS.USERS, users);
@@ -104,6 +156,20 @@ export function upsertUser(user) {
   users.push(newUser);
   write(KEYS.USERS, users);
   return newUser;
+}
+
+export function updateUser(userId, changes) {
+  const users = getUsers();
+  const idx = users.findIndex((u) => u.id === userId);
+  if (idx === -1) return null;
+  users[idx] = { ...users[idx], ...changes };
+  write(KEYS.USERS, users);
+  // keep the logged-in session in sync if it's the same user
+  const current = getCurrentUser();
+  if (current && current.id === userId) {
+    setCurrentUser(users[idx]);
+  }
+  return users[idx];
 }
 
 export function getCurrentUser() {
