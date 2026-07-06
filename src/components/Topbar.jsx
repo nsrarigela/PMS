@@ -1,4 +1,5 @@
 import { Search, Bell } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function Topbar({ user }) {
   return (
@@ -10,7 +11,11 @@ export default function Topbar({ user }) {
 
       <div className="topbar-right">
         <span className="topbar-role-badge">{user.role}</span>
-        <button className="topbar-icon-btn"><Bell size={18} /></button>
+
+        <Link to="/notifications" className="topbar-icon-btn" title="Notifications">
+          <Bell size={18} />
+        </Link>
+
         <div className="topbar-user">
           <strong>{user.name}</strong>
           <span>My Workspace</span>

@@ -25,16 +25,42 @@ export default function Reports() {
   const [bugs, setBugs] = useState([]);
 
   useEffect(() => {
-    if (!ready) return;
-    setProjects(getProjects());
-    setTasks(getAllTasks());
-    setUsers(getUsers());
-    setBugs(getAllBugs());
-  }, [ready]);
+  if (!ready) return;
+
+  const allProjects = getProjects();
+  const allTasks = getAllTasks();
+  const allUsers = getUsers();
+  const allBugs = getAllBugs();
+
+  if (user.role === "Project Manager") {
+    setProjects(allProjects);
+    setTasks(allTasks);
+    setBugs(allBugs);
+  } else {
+    const myTasks = allTasks.filter((t) => t.assignee === user.id);
+
+    const myProjectIds = [...new Set(myTasks.map((t) => t.projectId))];
+
+    setProjects(
+      allProjects.filter((p) => myProjectIds.includes(p.id))
+    );
+
+    setTasks(myTasks);
+
+    setBugs(
+      allBugs.filter((b) => b.assignee === user.id)
+    );
+  }
+
+  setUsers(allUsers);
+}, [ready, user]);
 
   if (!ready) return null;
 
-  const developers = users.filter((u) => u.role === "Developer");
+  const developers =
+  user.role === "Project Manager"
+    ? users.filter((u) => u.role === "Developer")
+    : [user];
 
   const projectChartData = projects.map((p) => {
     const pTasks = tasks.filter((t) => t.projectId === p.id);
@@ -122,7 +148,11 @@ export default function Reports() {
           </div>
 
           <div className="card" style={{ marginBottom: 16 }}>
-            <h3 style={{ marginBottom: 12, fontSize: 15 }}>Project progress</h3>
+            <h3 style={{ marginBottom: 12, fontSize: 15 }}>
+{user.role === "Project Manager"
+    ? "Project Progress"
+    : "My Projects Progress"}
+</h3>
             {projects.map((p) => {
               const pTasks = tasks.filter((t) => t.projectId === p.id);
               const done = pTasks.filter((t) => t.status === "done").length;
@@ -139,7 +169,11 @@ export default function Reports() {
           </div>
 
           <div className="card">
-            <h3 style={{ marginBottom: 12, fontSize: 15 }}>Developer performance</h3>
+          <h3 style={{ marginBottom: 12, fontSize: 15 }}>
+  {user.role === "Project Manager"
+    ? "Developer Performance"
+    : "My Performance"}
+</h3>
             <table>
               <thead>
                 <tr>
@@ -152,9 +186,19 @@ export default function Reports() {
               </thead>
               <tbody>
                 {developers.map((dev) => {
-                  const mine = tasks.filter((t) => t.assignee === dev.id);
+                 const mine =
+  user.role === "Project Manager"
+    ? getAllTasks().filter((t) => t.assignee === dev.id)
+    : tasks;
                   const done = mine.filter((t) => t.status === "done").length;
-                  const devBugs = bugs.filter((b) => b.assignee === dev.id && b.status !== "Fixed").length;
+                  const devBugs =
+  user.role === "Project Manager"
+    ? getAllBugs().filter(
+        (b) =>
+          b.assignee === dev.id &&
+          b.status !== "Fixed"
+      ).length
+    : bugs.filter((b) => b.status !== "Fixed").length;
                   const hours = mine.reduce((sum, t) => sum + (t.hoursLogged || 0), 0);
                   return (
                     <tr key={dev.id}>

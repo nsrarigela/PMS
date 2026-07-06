@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { useSession } from "../lib/useSession";
-import { addProject } from "../lib/store";
+import { addProject, getUsers } from "../lib/store";
 
 export default function NewProject() {
   const { user, ready, logout } = useSession();
@@ -13,11 +13,17 @@ export default function NewProject() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [status, setStatus] = useState("Active");
+  const [developers, setDevelopers] = useState([]);
+  const [selectedMembers, setSelectedMembers] = useState([]);
 
   useEffect(() => {
     if (ready && user.role !== "Project Manager") {
       navigate("/projects", { replace: true });
+      return;
     }
+
+    const devs = getUsers().filter((u) => u.role === "Developer");
+    setDevelopers(devs);
   }, [ready, user, navigate]);
 
   if (!ready || user.role !== "Project Manager") return null;
@@ -25,6 +31,7 @@ export default function NewProject() {
   function handleSubmit(e) {
     e.preventDefault();
     if (!name.trim()) return;
+
     const project = addProject({
       name: name.trim(),
       description: description.trim(),
@@ -33,7 +40,9 @@ export default function NewProject() {
       endDate,
       status,
       createdBy: user.id,
+      members: selectedMembers,
     });
+
     navigate(`/projects/${project.id}`);
   }
 
@@ -78,7 +87,54 @@ export default function NewProject() {
             <textarea id="pdesc" rows={4} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What is this project about?" />
           </div>
 
-          <button type="submit" className="btn btn-primary">Create project</button>
+          <div className="field">
+            <label>Assign Team Members</label>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2,1fr)",
+                gap: 10,
+                marginTop: 10,
+                padding: 10,
+                border: "1px solid var(--border)",
+                borderRadius: 8,
+              }}
+            >
+              {developers.map((dev) => (
+                <label
+                  key={dev.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedMembers.includes(dev.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedMembers([...selectedMembers, dev.id]);
+                      } else {
+                        setSelectedMembers(
+                          selectedMembers.filter((id) => id !== dev.id)
+                        );
+                      }
+                    }}
+                  />
+                  {dev.name}
+                </label>
+              ))}
+              {developers.length === 0 && (
+                <p style={{ fontSize: 12.5, color: "var(--muted)", gridColumn: "1 / -1" }}>
+                  No developer accounts yet — add some from the Users page first.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <button type="submit" className="btn btn-primary" style={{ marginTop: 12 }}>Create project</button>
         </form>
       </main>
     </div>

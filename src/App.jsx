@@ -3,6 +3,8 @@ import { useEffect, useState, lazy, Suspense } from "react";
 import { seedIfNeeded, getCurrentUser } from "./lib/store";
 import Profile from "./pages/Profile";
 import MyTasks from "./pages/MyTasks";
+import Users from "./pages/Users";
+import Notifications from "./pages/Notifications";
 
 // Lazy-loaded pages
 const Login = lazy(() => import("./pages/Login"));
@@ -39,9 +41,18 @@ export default function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="*" element={<Navigate to="/" replace />} />
         <Route path="/my-tasks" element={<MyTasks />} />
+        <Route
+  path="/notifications"
+  element={<Notifications />}
+/>
+        <Route
+  path="/users"
+  element={<Users />}
+/>
       </Routes>
     </Suspense>
   );
+
 }
 
 function RootRedirect() {

@@ -4,7 +4,7 @@ import { DndContext, closestCorners, PointerSensor, useSensor, useSensors, useDr
 import Sidebar from "../components/Sidebar";
 import TaskCard from "../components/TaskCard";
 import { useSession } from "../lib/useSession";
-import { getProject, getTasksByProject, getUsers, addTask, updateTask } from "../lib/store";
+import { getProject, getTasksByProject, getUsers, addTask, updateTask, addNotification } from "../lib/store";
 
 const COLUMNS = [
   { key: "todo", label: "To Do" },
@@ -35,14 +35,28 @@ export default function ProjectDetail() {
   const [users, setUsers] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [search, setSearch] = useState("");
+const [priorityFilter, setPriorityFilter] = useState("all");
+const [statusFilter, setStatusFilter] = useState("all");
+const [dueDate, setDueDate] = useState("");
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   function refresh() {
-    setProject(getProject(id));
-    setTasks(getTasksByProject(id));
-    setUsers(getUsers());
+  setProject(getProject(id));
+
+  const allTasks = getTasksByProject(id);
+
+  if (user.role === "Project Manager") {
+    setTasks(allTasks);
+  } else {
+    setTasks(
+      allTasks.filter((task) => task.assignee === user.id)
+    );
   }
+
+  setUsers(getUsers());
+}
 
   useEffect(() => {
     if (!ready) return;
@@ -53,12 +67,33 @@ export default function ProjectDetail() {
   if (!ready || !project) return null;
 
   const isPM = user.role === "Project Manager";
+  const projectMembers = users.filter((u) =>
+  project.members?.includes(u.id)
+);
+  function canEdit(task) {
+  return isPM || task.assignee === user.id;
+}
+  const myTasks = tasks.filter(
+  (task) => task.assignee === user.id
+);
   const userName = (uid) => users.find((u) => u.id === uid)?.name || "Unassigned";
 
-  function moveTask(task, newStatus) {
-    updateTask(task.id, { status: newStatus });
-    refresh();
-  }
+function moveTask(task, newStatus) {
+  updateTask(task.id, {
+    status: newStatus,
+  });
+
+  addNotification({
+    userId: task.assignee,
+    title: "Task Status Updated",
+    message: `${task.title} moved to ${newStatus}`,
+  });
+
+
+  // Notification will be added later
+
+  refresh();
+}
 
   function canEditTask(task) {
     return isPM || task.assignee === user.id;
@@ -97,17 +132,107 @@ export default function ProjectDetail() {
 
         {showForm && (
           <NewTaskForm
-            projectId={id}
-            users={users}
-            onCreated={() => { setShowForm(false); refresh(); }}
-          />
+  projectId={id}
+  users={projectMembers}
+  onCreated={() => {
+    setShowForm(false);
+    refresh();
+  }}
+/>  
         )}
+        <div
+className="card"
+style={{
+marginBottom:20
+}}
+>
+
+<div
+style={{
+display:"flex",
+gap:10
+}}
+>
+
+<input
+placeholder="Search task..."
+value={search}
+onChange={(e)=>setSearch(e.target.value)}
+/>
+
+<select
+value={priorityFilter}
+onChange={(e)=>setPriorityFilter(e.target.value)}
+>
+
+<option value="all">All Priority</option>
+<option value="high">High</option>
+<option value="medium">Medium</option>
+<option value="low">Low</option>
+
+</select>
+
+<select
+value={statusFilter}
+onChange={(e)=>setStatusFilter(e.target.value)}
+>
+
+<option value="all">All Status</option>
+
+<option value="todo">To Do</option>
+
+<option value="in-progress">
+In Progress
+</option>
+
+<option value="review">
+Review
+</option>
+
+<option value="done">
+Done
+</option>
+
+</select>
+
+</div>
+
+</div>
 
         <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
           <div className="board">
             {COLUMNS.map((col) => {
-              const colTasks = tasks.filter((t) => t.status === col.key);
-              return (
+const sourceTasks =
+  user.role === "Project Manager"
+    ? tasks
+    : myTasks;
+
+const filteredTasks = sourceTasks.filter((t) => {
+  if (
+    search &&
+    !t.title.toLowerCase().includes(search.toLowerCase())
+  )
+    return false;
+
+  if (
+    priorityFilter !== "all" &&
+    t.priority !== priorityFilter
+  )
+    return false;
+
+  if (
+    statusFilter !== "all" &&
+    t.status !== statusFilter
+  )
+    return false;
+
+  return true;
+});
+
+const colTasks = filteredTasks.filter(
+  (t) => t.status === col.key
+);
+          return (
                 <BoardColumn key={col.key} col={col} count={colTasks.length}>
                   {colTasks.map((t) => (
                     <TaskCard
@@ -147,48 +272,164 @@ function NewTaskForm({ projectId, users, onCreated }) {
   const [type, setType] = useState("task");
   const [priority, setPriority] = useState("medium");
   const [assignee, setAssignee] = useState(users[0]?.id || "");
+  const [dueDate, setDueDate] = useState("");
+  const [estimatedHours, setEstimatedHours] = useState("");
 
   function handleSubmit(e) {
     e.preventDefault();
+
     if (!title.trim()) return;
-    addTask({ projectId, title: title.trim(), description: description.trim(), type, priority, assignee });
+
+    if (!assignee) {
+      alert("Please assign the task.");
+      return;
+    }
+
+    addTask({
+      projectId,
+      title: title.trim(),
+      description: description.trim(),
+      type,
+      priority,
+      assignee,
+      dueDate,
+      estimatedHours,
+    });
+
+    addNotification({
+      userId: assignee,
+      title: "New Task Assigned",
+      message: `${title} has been assigned to you.`,
+    });
+
     onCreated();
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card" style={{ marginBottom: 20 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 12 }}>
-        <div className="field" style={{ marginBottom: 0 }}>
-          <label>Title</label>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Fix login redirect bug" />
+    <form
+      onSubmit={handleSubmit}
+      className="card"
+      style={{ marginBottom: 22 }}
+    >
+      <h3 style={{ marginBottom: 20 }}>
+        Create New Task
+      </h3>
+
+      <div className="field">
+        <label>Task Title</label>
+
+        <input
+          placeholder="Create Login Page"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </div>
+
+      <div className="field">
+        <label>Description</label>
+
+        <textarea
+          rows={4}
+          placeholder="Enter task description..."
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(2,1fr)",
+          gap: 16,
+        }}
+      >
+        <div className="field">
+          <label>Priority</label>
+
+          <select
+            value={priority}
+            onChange={(e) =>
+              setPriority(e.target.value)
+            }
+          >
+            <option value="low">Low</option>
+            <option value="medium">
+              Medium
+            </option>
+            <option value="high">High</option>
+          </select>
         </div>
-        <div className="field" style={{ marginBottom: 0 }}>
-          <label>Type</label>
-          <select value={type} onChange={(e) => setType(e.target.value)}>
+
+        <div className="field">
+          <label>Task Type</label>
+
+          <select
+            value={type}
+            onChange={(e) =>
+              setType(e.target.value)
+            }
+          >
             <option value="task">Task</option>
             <option value="bug">Bug</option>
           </select>
         </div>
-        <div className="field" style={{ marginBottom: 0 }}>
-          <label>Priority</label>
-          <select value={priority} onChange={(e) => setPriority(e.target.value)}>
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
+
+        <div className="field">
+          <label>Assign To</label>
+
+          <select
+            value={assignee}
+            onChange={(e) =>
+              setAssignee(e.target.value)
+            }
+          >
+            {users.map((u) => (
+              <option
+                key={u.id}
+                value={u.id}
+              >
+                {u.name}
+              </option>
+            ))}
           </select>
         </div>
-        <div className="field" style={{ marginBottom: 0 }}>
-          <label>Assignee</label>
-          <select value={assignee} onChange={(e) => setAssignee(e.target.value)}>
-            {users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-          </select>
+
+        <div className="field">
+          <label>Due Date</label>
+
+          <input
+            type="date"
+            value={dueDate}
+            onChange={(e) =>
+              setDueDate(e.target.value)
+            }
+          />
+        </div>
+
+        <div className="field">
+          <label>Estimated Hours</label>
+
+          <input
+            type="number"
+            min="1"
+            placeholder="8"
+            value={estimatedHours}
+            onChange={(e) =>
+              setEstimatedHours(e.target.value)
+            }
+          />
         </div>
       </div>
-      <div className="field" style={{ marginTop: 12 }}>
-        <label>Description</label>
-        <textarea rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Details for whoever picks this up..." />
-      </div>
-      <button type="submit" className="btn btn-primary">Add task</button>
+
+      <button
+        className="btn btn-primary"
+        style={{
+          marginTop: 18,
+          width: 180,
+        }}
+      >
+        Create Task
+      </button>
     </form>
   );
 }

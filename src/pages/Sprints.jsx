@@ -51,6 +51,14 @@ export default function Sprints() {
           <div>
             <h1>{project.name} &middot; Sprints</h1>
             <p>Short development cycles for this project.</p>
+         {isPM && (
+  <Link
+    to={`/projects/${id}/edit`}
+    className="btn btn-primary"
+  >
+    Edit Project
+  </Link>
+)}
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <Link to={`/projects/${id}`} className="btn">Back to board</Link>
