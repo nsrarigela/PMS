@@ -12,6 +12,7 @@ const KEYS = {
   CURRENT_USER: "pms_current_user",
   SEEDED: "pms_seeded_v9",
   NOTIFICATIONS: "pms_notifications",
+  ATTENDANCE: "pms_attendance",
 };
 
 export function getNotifications(userId) {
@@ -260,7 +261,21 @@ export function updateTask(taskId, changes) {
   const tasks = getAllTasks();
   const idx = tasks.findIndex((t) => t.id === taskId);
   if (idx === -1) return null;
-  tasks[idx] = { ...tasks[idx], ...changes };
+
+  const updated = { ...tasks[idx], ...changes };
+
+  // Auto-stamp completedAt whenever a task moves into/out of "done".
+  // This powers the sprint burndown chart, which needs to know *when*
+  // each task was finished, not just its current status.
+  if (changes.status) {
+    if (changes.status === "done" && !tasks[idx].completedAt) {
+      updated.completedAt = Date.now();
+    } else if (changes.status !== "done") {
+      updated.completedAt = null;
+    }
+  }
+
+  tasks[idx] = updated;
   write(KEYS.TASKS, tasks);
   return tasks[idx];
 }
@@ -321,4 +336,40 @@ export function addComment(taskId, user, message) {
     createdAt: new Date().toLocaleString(),
   });
   write("pms_comments", comments);
+}
+// ---------------- ATTENDANCE / TIME CLOCK ----------------
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export function getAttendanceRecords(userId) {
+  return read(KEYS.ATTENDANCE, []).filter((r) => r.userId === userId);
+}
+
+export function getTodayAttendance(userId) {
+  const records = read(KEYS.ATTENDANCE, []);
+  return records.find((r) => r.userId === userId && r.date === todayStr()) || null;
+}
+
+export function checkIn(userId) {
+  const records = read(KEYS.ATTENDANCE, []);
+  const existing = records.find((r) => r.userId === userId && r.date === todayStr());
+  if (existing) return existing;
+  const record = { id: uid("a"), userId, date: todayStr(), checkInAt: Date.now(), checkOutAt: null, hours: 0 };
+  records.push(record);
+  write(KEYS.ATTENDANCE, records);
+  return record;
+}
+
+export function checkOut(userId) {
+  const records = read(KEYS.ATTENDANCE, []);
+  const idx = records.findIndex((r) => r.userId === userId && r.date === todayStr());
+  if (idx === -1) return null;
+  const rec = records[idx];
+  if (rec.checkOutAt) return rec;
+  rec.checkOutAt = Date.now();
+  rec.hours = +(((rec.checkOutAt - rec.checkInAt) / 3600000).toFixed(2));
+  records[idx] = rec;
+  write(KEYS.ATTENDANCE, records);
+  return rec;
 }

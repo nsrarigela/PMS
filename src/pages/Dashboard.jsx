@@ -5,6 +5,7 @@ import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import { useSession } from "../lib/useSession";
 import { getProjects, getAllTasks, getUsers, updateTask } from "../lib/store";
+import { getUpcomingHolidays } from "../lib/holidays";
 
 const STATUS_LABELS = { todo: "To Do", "in-progress": "In Progress", review: "In Review", done: "Done" };
 const STATUS_OPTIONS = ["all", "todo", "in-progress", "review", "done"];
@@ -156,9 +157,11 @@ export default function Dashboard() {
   }, [tasks, search, statusFilter, priorityFilter, assigneeFilter, dueFilter, sortBy, user?.role]);
 
   const isPM = user?.role === "Project Manager";
+  const nextHoliday = getUpcomingHolidays(1)[0];
+
   if (!ready || !user) {
- return null;
-}
+    return null;
+  }
 
   return (
     <div className="app-shell">
@@ -205,6 +208,30 @@ export default function Dashboard() {
               <p>Your workspace is ready &middot; {user.role}</p>
             </div>
           </div>
+
+          {nextHoliday && (
+            <div className="card announcement-card" style={{ marginBottom: 18 }}>
+              <div className="announcement-header">
+                <div className="announcement-title">
+                  <span className="announcement-icon">📢</span>
+                  Company Announcements
+                </div>
+              </div>
+              <div className={`announcement-item ${nextHoliday.type === "national" ? "announcement-national" : "announcement-festival"}`}>
+                <div className="announcement-item-title">
+                  🎉 {nextHoliday.name} (in {nextHoliday.daysUntil} day{nextHoliday.daysUntil !== 1 ? "s" : ""})
+                </div>
+                <div className="announcement-item-date">
+                  {new Date(nextHoliday.date).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}
+                </div>
+                <p className="announcement-item-body">
+                  {nextHoliday.type === "national"
+                    ? `${nextHoliday.name} is a national holiday. Office will be closed.`
+                    : `${nextHoliday.name} is coming up. Plan your tasks accordingly.`}
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="stat-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
             <Link to="/projects" className="stat-card-color stat-purple">

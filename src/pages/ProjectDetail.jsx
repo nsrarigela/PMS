@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { DndContext, closestCorners, PointerSensor, useSensor, useSensors, useDroppable } from "@dnd-kit/core";
 import Sidebar from "../components/Sidebar";
+import Topbar from "../components/Topbar";
 import TaskCard from "../components/TaskCard";
 import { useSession } from "../lib/useSession";
 import { getProject, getTasksByProject, getUsers, addTask, updateTask, addNotification } from "../lib/store";
@@ -36,27 +37,27 @@ export default function ProjectDetail() {
   const [showForm, setShowForm] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [search, setSearch] = useState("");
-const [priorityFilter, setPriorityFilter] = useState("all");
-const [statusFilter, setStatusFilter] = useState("all");
-const [dueDate, setDueDate] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [dueDate, setDueDate] = useState("");
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   function refresh() {
-  setProject(getProject(id));
+    setProject(getProject(id));
 
-  const allTasks = getTasksByProject(id);
+    const allTasks = getTasksByProject(id);
 
-  if (user.role === "Project Manager") {
-    setTasks(allTasks);
-  } else {
-    setTasks(
-      allTasks.filter((task) => task.assignee === user.id)
-    );
+    if (user.role === "Project Manager") {
+      setTasks(allTasks);
+    } else {
+      setTasks(
+        allTasks.filter((task) => task.assignee === user.id)
+      );
+    }
+
+    setUsers(getUsers());
   }
-
-  setUsers(getUsers());
-}
 
   useEffect(() => {
     if (!ready) return;
@@ -68,32 +69,29 @@ const [dueDate, setDueDate] = useState("");
 
   const isPM = user.role === "Project Manager";
   const projectMembers = users.filter((u) =>
-  project.members?.includes(u.id)
-);
+    project.members?.includes(u.id)
+  );
   function canEdit(task) {
-  return isPM || task.assignee === user.id;
-}
+    return isPM || task.assignee === user.id;
+  }
   const myTasks = tasks.filter(
-  (task) => task.assignee === user.id
-);
+    (task) => task.assignee === user.id
+  );
   const userName = (uid) => users.find((u) => u.id === uid)?.name || "Unassigned";
 
-function moveTask(task, newStatus) {
-  updateTask(task.id, {
-    status: newStatus,
-  });
+  function moveTask(task, newStatus) {
+    updateTask(task.id, {
+      status: newStatus,
+    });
 
-  addNotification({
-    userId: task.assignee,
-    title: "Task Status Updated",
-    message: `${task.title} moved to ${newStatus}`,
-  });
+    addNotification({
+      userId: task.assignee,
+      title: "Task Status Updated",
+      message: `${task.title} moved to ${newStatus}`,
+    });
 
-
-  // Notification will be added later
-
-  refresh();
-}
+    refresh();
+  }
 
   function canEditTask(task) {
     return isPM || task.assignee === user.id;
@@ -113,144 +111,129 @@ function moveTask(task, newStatus) {
   return (
     <div className="app-shell">
       <Sidebar user={user} onLogout={logout} />
-      <main className="content" style={{ maxWidth: 1100 }}>
-        <div className="page-header">
-          <div>
-            <h1>{project.name}</h1>
-            <p>{project.description}</p>
+      <div className="main-col">
+        <Topbar user={user} />
+        <main className="content" style={{ maxWidth: 1100 }}>
+          <div className="page-header">
+            <div>
+              <h1>{project.name}</h1>
+              <p>{project.description}</p>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <Link to={`/projects/${id}/sprints`} className="btn">Sprints</Link>
+              <Link to={`/projects/${id}/bugs`} className="btn">Bugs</Link>
+              {isPM && (
+                <button className="btn btn-primary" onClick={() => setShowForm((s) => !s)}>
+                  {showForm ? "Close" : "+ New task"}
+                </button>
+              )}
+            </div>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <Link to={`/projects/${id}/sprints`} className="btn">Sprints</Link>
-            <Link to={`/projects/${id}/bugs`} className="btn">Bugs</Link>
-            {isPM && (
-              <button className="btn btn-primary" onClick={() => setShowForm((s) => !s)}>
-                {showForm ? "Close" : "+ New task"}
-              </button>
-            )}
+
+          {showForm && (
+            <NewTaskForm
+              projectId={id}
+              users={projectMembers}
+              onCreated={() => {
+                setShowForm(false);
+                refresh();
+              }}
+            />
+          )}
+          <div
+            className="card"
+            style={{
+              marginBottom: 20
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                gap: 10
+              }}
+            >
+              <input
+                placeholder="Search task..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+
+              <select
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value)}
+              >
+                <option value="all">All Priority</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="all">All Status</option>
+                <option value="todo">To Do</option>
+                <option value="in-progress">In Progress</option>
+                <option value="review">Review</option>
+                <option value="done">Done</option>
+              </select>
+            </div>
           </div>
-        </div>
 
-        {showForm && (
-          <NewTaskForm
-  projectId={id}
-  users={projectMembers}
-  onCreated={() => {
-    setShowForm(false);
-    refresh();
-  }}
-/>  
-        )}
-        <div
-className="card"
-style={{
-marginBottom:20
-}}
->
+          <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+            <div className="board">
+              {COLUMNS.map((col) => {
+                const sourceTasks =
+                  user.role === "Project Manager"
+                    ? tasks
+                    : myTasks;
 
-<div
-style={{
-display:"flex",
-gap:10
-}}
->
+                const filteredTasks = sourceTasks.filter((t) => {
+                  if (
+                    search &&
+                    !t.title.toLowerCase().includes(search.toLowerCase())
+                  )
+                    return false;
 
-<input
-placeholder="Search task..."
-value={search}
-onChange={(e)=>setSearch(e.target.value)}
-/>
+                  if (
+                    priorityFilter !== "all" &&
+                    t.priority !== priorityFilter
+                  )
+                    return false;
 
-<select
-value={priorityFilter}
-onChange={(e)=>setPriorityFilter(e.target.value)}
->
+                  if (
+                    statusFilter !== "all" &&
+                    t.status !== statusFilter
+                  )
+                    return false;
 
-<option value="all">All Priority</option>
-<option value="high">High</option>
-<option value="medium">Medium</option>
-<option value="low">Low</option>
+                  return true;
+                });
 
-</select>
-
-<select
-value={statusFilter}
-onChange={(e)=>setStatusFilter(e.target.value)}
->
-
-<option value="all">All Status</option>
-
-<option value="todo">To Do</option>
-
-<option value="in-progress">
-In Progress
-</option>
-
-<option value="review">
-Review
-</option>
-
-<option value="done">
-Done
-</option>
-
-</select>
-
-</div>
-
-</div>
-
-        <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
-          <div className="board">
-            {COLUMNS.map((col) => {
-const sourceTasks =
-  user.role === "Project Manager"
-    ? tasks
-    : myTasks;
-
-const filteredTasks = sourceTasks.filter((t) => {
-  if (
-    search &&
-    !t.title.toLowerCase().includes(search.toLowerCase())
-  )
-    return false;
-
-  if (
-    priorityFilter !== "all" &&
-    t.priority !== priorityFilter
-  )
-    return false;
-
-  if (
-    statusFilter !== "all" &&
-    t.status !== statusFilter
-  )
-    return false;
-
-  return true;
-});
-
-const colTasks = filteredTasks.filter(
-  (t) => t.status === col.key
-);
-          return (
-                <BoardColumn key={col.key} col={col} count={colTasks.length}>
-                  {colTasks.map((t) => (
-                    <TaskCard
-                      key={t.id}
-                      task={t}
-                      assigneeName={userName(t.assignee)}
-                      canEdit={canEditTask(t)}
-                      onMove={moveTask}
-                      onOpen={setSelectedTask}
-                    />
-                  ))}
-                  {colTasks.length === 0 && <p style={{ fontSize: 12, color: "var(--muted)", padding: "0 6px" }}>No tasks</p>}
-                </BoardColumn>
-              );
-            })}
-          </div>
-        </DndContext>
-      </main>
+                const colTasks = filteredTasks.filter(
+                  (t) => t.status === col.key
+                );
+                return (
+                  <BoardColumn key={col.key} col={col} count={colTasks.length}>
+                    {colTasks.map((t) => (
+                      <TaskCard
+                        key={t.id}
+                        task={t}
+                        assigneeName={userName(t.assignee)}
+                        canEdit={canEditTask(t)}
+                        onMove={moveTask}
+                        onOpen={setSelectedTask}
+                      />
+                    ))}
+                    {colTasks.length === 0 && <p style={{ fontSize: 12, color: "var(--muted)", padding: "0 6px" }}>No tasks</p>}
+                  </BoardColumn>
+                );
+              })}
+            </div>
+          </DndContext>
+        </main>
+      </div>
 
       {selectedTask && (
         <TaskDetailPanel
